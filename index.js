@@ -4,18 +4,17 @@ import cors from "cors";
 import admin from "firebase-admin";
 import dotenv from "dotenv";
 
-dotenv.config(); // Load from Railway or local .env
+dotenv.config();
 
-// ✅ Use only environment variables for Firebase config
 if (!process.env.PRIVATE_KEY || !process.env.CLIENT_EMAIL || !process.env.PROJECT_ID) {
-  throw new Error("❌ Missing Firebase credentials in environment variables");
+  throw new Error("Missing Firebase credentials in environment variables");
 }
 
 const serviceAccount = {
   type: process.env.TYPE,
   project_id: process.env.PROJECT_ID,
   private_key_id: process.env.PRIVATE_KEY_ID,
-  private_key: process.env.PRIVATE_KEY.replace(/\\n/g, "\n"),
+  private_key: process.env.PRIVATE_KEY,
   client_email: process.env.CLIENT_EMAIL,
   client_id: process.env.CLIENT_ID,
   auth_uri: process.env.AUTH_URI,
@@ -40,7 +39,7 @@ app.use(cors());
 app.use(bodyParser.json());
 
 app.get("/", (req, res) => {
-  res.send("✅ HealthTick API is running");
+  res.send("HealthTick API is running");
 });
 
 app.get("/api/getUsers", async (req, res) => {
@@ -109,5 +108,5 @@ app.delete("/api/deleteBookings/:id", async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
