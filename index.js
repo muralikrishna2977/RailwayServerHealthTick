@@ -3,36 +3,27 @@ import bodyParser from "body-parser";
 import cors from "cors";
 import admin from "firebase-admin";
 import dotenv from "dotenv";
-import path from "path";
-import fs from "fs";
-import { fileURLToPath } from "url";
 
-dotenv.config();
+dotenv.config(); // Load from Railway or local .env
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Firebase Setup
-let serviceAccount;
-
-if (process.env.PRIVATE_KEY) {
-  serviceAccount = {
-    type: process.env.TYPE,
-    project_id: process.env.PROJECT_ID,
-    private_key_id: process.env.PRIVATE_KEY_ID,
-    private_key: process.env.PRIVATE_KEY.replace(/\\n/g, "\n"),
-    client_email: process.env.CLIENT_EMAIL,
-    client_id: process.env.CLIENT_ID,
-    auth_uri: process.env.AUTH_URI,
-    token_uri: process.env.TOKEN_URI,
-    auth_provider_x509_cert_url: process.env.AUTH_PROVIDER_CERT_URL,
-    client_x509_cert_url: process.env.CLIENT_CERT_URL,
-    universe_domain: process.env.UNIVERSE_DOMAIN,
-  };
-} else {
-  const serviceAccountPath = path.join(__dirname, "serviceAccountKey.json");
-  serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, "utf8"));
+// ✅ Use only environment variables for Firebase config
+if (!process.env.PRIVATE_KEY || !process.env.CLIENT_EMAIL || !process.env.PROJECT_ID) {
+  throw new Error("❌ Missing Firebase credentials in environment variables");
 }
+
+const serviceAccount = {
+  type: process.env.TYPE,
+  project_id: process.env.PROJECT_ID,
+  private_key_id: process.env.PRIVATE_KEY_ID,
+  private_key: process.env.PRIVATE_KEY.replace(/\\n/g, "\n"),
+  client_email: process.env.CLIENT_EMAIL,
+  client_id: process.env.CLIENT_ID,
+  auth_uri: process.env.AUTH_URI,
+  token_uri: process.env.TOKEN_URI,
+  auth_provider_x509_cert_url: process.env.AUTH_PROVIDER_CERT_URL,
+  client_x509_cert_url: process.env.CLIENT_CERT_URL,
+  universe_domain: process.env.UNIVERSE_DOMAIN,
+};
 
 if (!admin.apps.length) {
   admin.initializeApp({
@@ -42,7 +33,6 @@ if (!admin.apps.length) {
 
 const db = admin.firestore();
 
-// Express App
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -50,13 +40,13 @@ app.use(cors());
 app.use(bodyParser.json());
 
 app.get("/", (req, res) => {
-  res.send("HealthTick API is running");
+  res.send("✅ HealthTick API is running");
 });
 
 app.get("/api/getUsers", async (req, res) => {
   try {
     const snapshot = await db.collection("users").get();
-    const users = snapshot.docs.map(doc => ({
+    const users = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
     }));
@@ -70,6 +60,7 @@ app.get("/api/getUsers", async (req, res) => {
 app.post("/api/addBooking", async (req, res) => {
   try {
     const { date, time, recurring, clientName, phone, callType } = req.body;
+
     if (!date || !time || !clientName || !phone || !callType) {
       return res.status(400).json({ message: "Missing required fields." });
     }
@@ -93,7 +84,7 @@ app.post("/api/addBooking", async (req, res) => {
 app.get("/api/getBookings", async (req, res) => {
   try {
     const snapshot = await db.collection("bookings").get();
-    const bookings = snapshot.docs.map(doc => ({
+    const bookings = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
     }));
@@ -118,5 +109,5 @@ app.delete("/api/deleteBookings/:id", async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
